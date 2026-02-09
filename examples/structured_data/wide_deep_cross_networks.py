@@ -41,8 +41,10 @@ import math
 import numpy as np
 import pandas as pd
 from tensorflow import data as tf_data
-import keras
-from keras import layers
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 
 """
 ## Prepare the data
@@ -279,11 +281,11 @@ def encode_inputs(inputs, use_embedding=False):
             # Create a lookup to convert string values to an integer indices.
             # Since we are not using a mask token nor expecting any out of vocabulary
             # (oov) token, we set mask_token to None and  num_oov_indices to 0.
-            lookup = layers.StringLookup(
+            lookup = StringLookup(
                 vocabulary=vocabulary,
                 mask_token=None,
                 num_oov_indices=0,
-                output_mode="int" if use_embedding else "binary",
+                encoding="int" if use_embedding else "binary",
             )
             if use_embedding:
                 # Convert the string input values into integer indices.
@@ -298,11 +300,12 @@ def encode_inputs(inputs, use_embedding=False):
             else:
                 # Convert the string input values into a one hot encoding.
                 encoded_feature = lookup(
-                    keras.ops.expand_dims(inputs[feature_name], -1)
+                    tf.expand_dims(inputs[feature_name], -1)
                 )
+                encoded_feature = tf.cast(encoded_feature, tf.float32)
         else:
             # Use the numerical features as-is.
-            encoded_feature = keras.ops.expand_dims(inputs[feature_name], -1)
+            encoded_feature = tf.expand_dims(inputs[feature_name], -1)
 
         encoded_features.append(encoded_feature)
 
